@@ -49,51 +49,37 @@ function log(message, level = 'info') {
     }
 }
 
-// Database initialization
-let db;
-if (process.env.ENABLE_DATABASE !== 'false' && config.enableDatabase) {
+// Database initialization (JSON-based for compatibility)
+const DB_PATH = path.join(__dirname, 'data', 'server.json');
+let db = {
+    mods: [],
+    players: [],
+    stats: [],
+    whitelist: [],
+    save() {
+        try {
+            fs.writeFile(DB_PATH, JSON.stringify(this, null, 2)).catch(() => {});
+        } catch (e) {
+            log('DB save error: ' + e.message, 'error');
+        }
+    }
+};
+
+// Load database
+async function loadDatabase() {
     try {
-        db = sqlite3('data/server.db');
-        db.pragma('journal_mode = WAL');
-        
-        db.exec(`
-            CREATE TABLE IF NOT EXISTS mods (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                version TEXT,
-                size INTEGER,
-                uploadedAt TEXT,
-                downloads INTEGER DEFAULT 0,
-                checksum TEXT
-            );
-            
-            CREATE TABLE IF NOT EXISTS players (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                firstSeen TEXT,
-                lastSeen TEXT,
-                playTime INTEGER DEFAULT 0
-            );
-            
-            CREATE TABLE IF NOT EXISTS server_stats (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT,
-                players_online INTEGER,
-                memory_usage INTEGER,
-                cpu_usage REAL,
-                uptime INTEGER
-            );
-            
-            CREATE TABLE IF NOT EXISTS whitelist (
-                player_id TEXT PRIMARY KEY,
-                added_by TEXT,
-                added_at TEXT
-            );
-        `);
-        
-        log('Database initialized successfully', 'info');
+        await fs.mkdir(path.join(__dirname, 'data'), { recursive: true });
+        const content = await fs.readFile(DB_PATH, 'utf8').catch(() => null);
+        if (content) {
+            const loaded = JSON.parse(content);
+            db.mods = loaded.mods || [];
+            db.players = loaded.players || [];
+            db.stats = loaded.stats || [];
+            db.whitelist = loaded.whitelist || [];
+        }
+        log('Database loaded (JSON)', 'info');
     } catch (error) {
-        log('Database initialization failed: ' + error.message, 'error');
+        log('Database load error: ' + error.message, 'error');
     }
 }
 
