@@ -1,0 +1,14 @@
+[2026-06-14T10:26:41.149Z] [INFO] Database initialized successfully
+[2026-06-14T10:26:41.157Z] [INFO] WebSocket server running on port 25566
+[2026-06-14T10:26:41.269Z] [INFO] ╔══════════════════════════════════════════════════════╗
+[2026-06-14T10:26:41.270Z] [INFO] ║     My Summer Car Multiplayer Server v2.0            ║
+[2026-06-14T10:26:41.270Z] [INFO] ╚══════════════════════════════════════════════════════╝
+[2026-06-14T10:26:41.271Z] [INFO] Web Panel: http://localhost:25565
+[2026-06-14T10:26:41.272Z] [INFO] WebSocket: ws://localhost:25566
+[2026-06-14T10:26:41.271Z] [INFO] Server running on http://0.0.0.0:25565
+[2026-06-14T10:26:41.273Z] [INFO] Server Name: MSC Multiplayer Server
+[2026-06-14T10:26:41.272Z] [INFO] Max Players: 10
+[2026-06-14T10:26:41.273Z] [INFO] ══════════════════════════════════════════════════════
+[2026-06-14T10:26:41.274Z] [INFO] Loaded 0 mods
+[2026-06-14T10:26:46.287Z] [INFO] Backup system enabled
+[2026-06-14T10:27:05.272Z] [INFO] Loaded 0 mods

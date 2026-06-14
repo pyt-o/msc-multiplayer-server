@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSC Multiplayer - Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 30px; }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .card h2 { color: #667eea; margin-bottom: 20px; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-box h3 { font-size: 2em; margin-bottom: 5px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
+        input[type="file"] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-danger { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .mod-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 MSC Multiplayer Server Panel</h1>
+        
+        <div id="alert"></div>
+        
+        <div class="card">
+            <h2>📊 Statystyki</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3 id="serverName">-</h3>
+                    <p>Nazwa Serwera</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="playerCount">0/10</h3>
+                    <p>Gracze</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="modCount">0</h3>
+                    <p>Mody</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📦 Dodaj Mody</h2>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label>Wybierz pliki DLL:</label>
+                    <input type="file" id="mods" name="mods" multiple accept=".dll">
+                </div>
+                <button type="submit" class="btn">📤 Wyślij Mody</button>
+            </form>
+        </div>
+        
+        <div class="card">
+            <h2>📋 Zainstalowane Mody</h2>
+            <div id="modsList">
+                <p>Ładowanie...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = window.location.origin;
+        
+        window.onload = function() {
+            loadServerInfo();
+            loadMods();
+        };
+        
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById('alert');
+            alert.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => alert.innerHTML = '', 5000);
+        }
+        
+        async function loadServerInfo() {
+            try {
+                const res = await fetch(`${API}/api/server-info`);
+                const data = await res.json();
+                document.getElementById('serverName').textContent = data.serverName;
+                document.getElementById('playerCount').textContent = `${data.currentPlayers}/${data.maxPlayers}`;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        async function loadMods() {
+            try {
+                const res = await fetch(`${API}/api/mods`);
+                const mods = await res.json();
+                document.getElementById('modCount').textContent = mods.length;
+                
+                const list = document.getElementById('modsList');
+                if (mods.length === 0) {
+                    list.innerHTML = '<p>Brak modów</p>';
+                    return;
+                }
+                
+                list.innerHTML = mods.map(mod => `
+                    <div class="mod-item">
+                        <div>
+                            <h4>📦 ${mod.name}</h4>
+                            <p>${Math.round(mod.size / 1024)} KB</p>
+                        </div>
+                        <button onclick="deleteMod('${mod.name}')" class="btn btn-danger">🗑️ Usuń</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const files = document.getElementById('mods').files;
+            if (files.length === 0) {
+                showAlert('Wybierz przynajmniej jeden plik!', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            for (let file of files) {
+                formData.append('mods', file);
+            }
+            
+            try {
+                const res = await fetch(`${API}/api/mods`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await res.json();
+                if (res.ok) {
+                    showAlert(`Wysłano ${result.mods.length} modów!`, 'success');
+                    loadMods();
+                    document.getElementById('mods').value = '';
+                } else {
+                    showAlert('Błąd: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Błąd: ' + error.message, 'error');
+            }
+        });
+        
+        async function deleteMod(name) {
+            if (!confirm(`Usunąć mod "${name}"?`)) return;
+            
+            try {
+                const res = await fetch(`${API}/api/mods/${name}`, {
+                    method: 'DELETE'
+                });
+                
+                if (res.ok) {
+                    showAlert('Mod usunięty!', 'success');
+                    loadMods();
+                } else {
+                    showAlert('Błąd usuwania', 'error');
+                }
+            } catch (error) {
+                showAlert('Błąd: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

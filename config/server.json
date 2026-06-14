@@ -1,0 +1,17 @@
+{
+  "serverName": "MSC Multiplayer Server",
+  "description": "My Summer Car Multiplayer",
+  "port": 25565,
+  "maxPlayers": 10,
+  "enableWhitelist": false,
+  "enablePassword": false,
+  "autoUpdateMods": true,
+  "enableBackups": true,
+  "backupInterval": 6,
+  "enableWebSocket": true,
+  "wsPort": 25566,
+  "enableDatabase": true,
+  "logLevel": "info",
+  "maxUploadSize": 100,
+  "allowedModExtensions": [".dll", ".unity3d", ".assetbundle"]
+}
